@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           category: string
           created_at: string
+          dosis: string | null
+          expired_date: string | null
           id: string
           image: string | null
           name: string
@@ -27,6 +29,8 @@ export type Database = {
         Insert: {
           category: string
           created_at?: string
+          dosis?: string | null
+          expired_date?: string | null
           id?: string
           image?: string | null
           name: string
@@ -36,6 +40,8 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string
+          dosis?: string | null
+          expired_date?: string | null
           id?: string
           image?: string | null
           name?: string
