@@ -33,7 +33,7 @@ export default function Layout() {
                 <ShoppingCart className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold gradient-primary bg-clip-text text-transparent">IndoPride POS</h1>
+                <h1 className="text-xl font-bold gradient-primary bg-clip-text">IndoPride POS</h1>
                 <p className="text-xs text-muted-foreground">Kasir Mini Professional</p>
               </div>
             </div>
