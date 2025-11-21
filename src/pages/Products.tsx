@@ -19,6 +19,8 @@ export default function Products() {
     price: "",
     stock: "",
     image: "",
+    dosis: "",
+    expired_date: "",
   });
 
   const { toast } = useToast();
@@ -74,7 +76,7 @@ export default function Products() {
   });
 
   const resetForm = () => {
-    setFormData({ name: "", category: "", price: "", stock: "", image: "" });
+    setFormData({ name: "", category: "", price: "", stock: "", image: "", dosis: "", expired_date: "" });
     setEditingProduct(null);
   };
 
@@ -101,6 +103,8 @@ export default function Products() {
       price: product.price.toString(),
       stock: product.stock.toString(),
       image: product.image || "",
+      dosis: product.dosis || "",
+      expired_date: product.expired_date || "",
     });
     setIsDialogOpen(true);
   };
@@ -171,6 +175,24 @@ export default function Products() {
                   />
                 </div>
               </div>
+              <div>
+                <Label htmlFor="dosis">Dosis</Label>
+                <Input
+                  id="dosis"
+                  value={formData.dosis}
+                  onChange={(e) => setFormData({ ...formData, dosis: e.target.value })}
+                  placeholder="Contoh: 3x1 tablet/hari"
+                />
+              </div>
+              <div>
+                <Label htmlFor="expired_date">Tanggal Kadaluarsa</Label>
+                <Input
+                  id="expired_date"
+                  type="date"
+                  value={formData.expired_date}
+                  onChange={(e) => setFormData({ ...formData, expired_date: e.target.value })}
+                />
+              </div>
               <Button type="submit" className="w-full">
                 {editingProduct ? "Update Produk" : "Tambah Produk"}
               </Button>
@@ -211,19 +233,39 @@ export default function Products() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Harga</p>
-                    <p className="text-xl font-bold text-primary">
-                      Rp {Number(product.price).toLocaleString("id-ID")}
-                    </p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Harga</p>
+                      <p className="text-xl font-bold text-primary">
+                        Rp {Number(product.price).toLocaleString("id-ID")}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">Stok</p>
+                      <p className={`text-xl font-bold ${product.stock < 10 ? "text-destructive" : "text-success"}`}>
+                        {product.stock}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Stok</p>
-                    <p className={`text-xl font-bold ${product.stock < 10 ? "text-destructive" : "text-success"}`}>
-                      {product.stock}
-                    </p>
-                  </div>
+                  {product.dosis && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Dosis</p>
+                      <p className="text-sm font-medium">{product.dosis}</p>
+                    </div>
+                  )}
+                  {product.expired_date && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Kadaluarsa</p>
+                      <p className="text-sm font-medium">
+                        {new Date(product.expired_date).toLocaleDateString("id-ID", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <Button
