@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Plus, Minus, Trash2, ShoppingCart, Receipt } from "lucide-react";
+import { Plus, Minus, Trash2, ShoppingCart, Receipt, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -14,13 +14,18 @@ interface CartItem {
   quantity: number;
 }
 
+interface TransactionWithItems {
+  transaction: any;
+  items: CartItem[];
+}
+
 export default function Cashier() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [tax, setTax] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [paid, setPaid] = useState("");
   const [showReceipt, setShowReceipt] = useState(false);
-  const [lastTransaction, setLastTransaction] = useState<any>(null);
+  const [lastTransaction, setLastTransaction] = useState<TransactionWithItems | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -64,7 +69,10 @@ export default function Cashier() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      setLastTransaction(data);
+      setLastTransaction({
+        transaction: data,
+        items: [...cart]
+      });
       setShowReceipt(true);
       setCart([]);
       setTax(0);
@@ -139,6 +147,10 @@ export default function Cashier() {
       paid: parseFloat(paid),
       change: change >= 0 ? change : 0,
     });
+  };
+
+  const handlePrintReceipt = () => {
+    window.print();
   };
 
   return (
@@ -299,39 +311,112 @@ export default function Cashier() {
       </div>
 
       <Dialog open={showReceipt} onOpenChange={setShowReceipt}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-center">Struk Pembayaran</DialogTitle>
           </DialogHeader>
           {lastTransaction && (
-            <div className="space-y-4 text-sm">
-              <div className="text-center border-b border-border pb-4">
-                <h3 className="font-bold text-lg">IndoPride POS</h3>
-                <p className="text-muted-foreground">
-                  {new Date(lastTransaction.created_at).toLocaleString("id-ID")}
-                </p>
+            <div id="receipt-content">
+              <div className="space-y-4 text-sm">
+                <div className="text-center border-b border-border pb-4">
+                  <h3 className="font-bold text-lg">IndoPride POS</h3>
+                  <p className="text-xs text-muted-foreground">Apotek Terpercaya</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {new Date(lastTransaction.transaction.created_at).toLocaleString("id-ID", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit"
+                    })}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="font-semibold border-b border-border pb-1">Detail Pembelian:</p>
+                  {lastTransaction.items.map((item, index) => (
+                    <div key={index} className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="font-medium">{item.product.name}</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-muted-foreground pl-2">
+                        <span>{item.quantity} x Rp {Number(item.product.price).toLocaleString("id-ID")}</span>
+                        <span className="font-medium">Rp {(item.quantity * Number(item.product.price)).toLocaleString("id-ID")}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-1 border-t border-border pt-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span>Rp {lastTransaction.items.reduce((sum, item) => sum + (item.quantity * Number(item.product.price)), 0).toLocaleString("id-ID")}</span>
+                  </div>
+                  {lastTransaction.transaction.tax > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Pajak</span>
+                      <span>Rp {Number(lastTransaction.transaction.tax).toLocaleString("id-ID")}</span>
+                    </div>
+                  )}
+                  {lastTransaction.transaction.discount > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Diskon</span>
+                      <span>- Rp {Number(lastTransaction.transaction.discount).toLocaleString("id-ID")}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-bold border-t border-border pt-2">
+                    <span>Total</span>
+                    <span>Rp {Number(lastTransaction.transaction.total_price).toLocaleString("id-ID")}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Dibayar</span>
+                    <span>Rp {Number(lastTransaction.transaction.paid).toLocaleString("id-ID")}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-success">
+                    <span>Kembalian</span>
+                    <span>Rp {Number(lastTransaction.transaction.change).toLocaleString("id-ID")}</span>
+                  </div>
+                </div>
+
+                <div className="text-center text-xs text-muted-foreground border-t border-border pt-4">
+                  <p>Terima kasih atas kunjungan Anda!</p>
+                  <p className="mt-1">Semoga lekas sembuh</p>
+                </div>
               </div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Total</span>
-                  <span>Rp {Number(lastTransaction.total_price).toLocaleString("id-ID")}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Dibayar</span>
-                  <span>Rp {Number(lastTransaction.paid).toLocaleString("id-ID")}</span>
-                </div>
-                <div className="flex justify-between font-bold border-t border-border pt-2">
-                  <span>Kembalian</span>
-                  <span className="text-primary">Rp {Number(lastTransaction.change).toLocaleString("id-ID")}</span>
-                </div>
-              </div>
-              <div className="text-center text-muted-foreground border-t border-border pt-4">
-                Terima kasih atas kunjungan Anda!
+              
+              <div className="mt-4 print:hidden">
+                <Button onClick={handlePrintReceipt} className="w-full gap-2">
+                  <Printer className="h-4 w-4" />
+                  Cetak Struk
+                </Button>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #receipt-content,
+          #receipt-content * {
+            visibility: visible;
+          }
+          #receipt-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 80mm;
+            padding: 10mm;
+            font-size: 12px;
+          }
+          .print\\:hidden {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
