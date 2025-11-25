@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Edit, Trash2, Search, Package, AlertTriangle } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Package, AlertTriangle, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import * as XLSX from "xlsx";
 
 export default function Products() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -124,6 +125,68 @@ export default function Products() {
     return new Date(expiredDate) <= threeMonthsFromNow;
   };
 
+  const handleExportToExcel = () => {
+    if (!products || products.length === 0) {
+      toast({ 
+        title: "Tidak ada data untuk diekspor",
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    // Format data untuk Excel
+    const excelData = products.map((product, index) => ({
+      No: index + 1,
+      "Nama Produk": product.name,
+      Kategori: product.category,
+      "Harga (Rp)": product.price,
+      Stok: product.stock,
+      Dosis: product.dosis || "-",
+      "Tanggal Kadaluarsa": product.expired_date 
+        ? new Date(product.expired_date).toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          })
+        : "-",
+      Status: product.stock < 10 
+        ? "Stok Rendah" 
+        : isExpiringSoon(product.expired_date) 
+        ? "Segera Expired" 
+        : "Normal",
+    }));
+
+    // Buat worksheet dan workbook
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Stok Obat");
+
+    // Set column widths
+    const columnWidths = [
+      { wch: 5 },  // No
+      { wch: 30 }, // Nama Produk
+      { wch: 20 }, // Kategori
+      { wch: 15 }, // Harga
+      { wch: 10 }, // Stok
+      { wch: 25 }, // Dosis
+      { wch: 25 }, // Tanggal Kadaluarsa
+      { wch: 15 }, // Status
+    ];
+    worksheet["!cols"] = columnWidths;
+
+    // Generate file dengan timestamp
+    const date = new Date().toISOString().split("T")[0];
+    const filename = `Laporan_Stok_Obat_${date}.xlsx`;
+    
+    // Download file
+    XLSX.writeFile(workbook, filename);
+    
+    toast({ 
+      title: "Laporan berhasil diexport",
+      description: `File ${filename} telah diunduh` 
+    });
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -131,13 +194,18 @@ export default function Products() {
           <h2 className="text-3xl font-bold tracking-tight">Manajemen Produk</h2>
           <p className="text-muted-foreground">Kelola produk Anda</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Tambah Produk
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button onClick={handleExportToExcel} variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            Export Excel
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Tambah Produk
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>{editingProduct ? "Edit Produk" : "Tambah Produk Baru"}</DialogTitle>
@@ -207,6 +275,7 @@ export default function Products() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
