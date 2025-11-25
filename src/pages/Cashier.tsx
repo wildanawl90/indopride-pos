@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Minus, Trash2, ShoppingCart, Receipt, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import BarcodeScanner from "@/components/BarcodeScanner";
 
 interface CartItem {
   product: any;
@@ -153,12 +154,32 @@ export default function Cashier() {
     window.print();
   };
 
+  const handleBarcodeScanned = (barcode: string) => {
+    const product = products?.find((p) => p.barcode === barcode);
+    if (product) {
+      addToCart(product);
+      toast({ 
+        title: "Produk ditambahkan", 
+        description: `${product.name} berhasil ditambahkan ke keranjang` 
+      });
+    } else {
+      toast({ 
+        title: "Produk tidak ditemukan", 
+        description: `Barcode ${barcode} tidak terdaftar`,
+        variant: "destructive" 
+      });
+    }
+  };
+
   return (
     <div className="grid gap-6 lg:grid-cols-3 animate-fade-in">
       <div className="lg:col-span-2 space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Kasir</h2>
-          <p className="text-muted-foreground">Pilih produk untuk ditambahkan ke keranjang</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Kasir</h2>
+            <p className="text-muted-foreground">Pilih produk untuk ditambahkan ke keranjang</p>
+          </div>
+          <BarcodeScanner onScanSuccess={handleBarcodeScanned} />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">

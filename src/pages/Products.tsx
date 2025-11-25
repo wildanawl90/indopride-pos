@@ -23,6 +23,7 @@ export default function Products() {
     image: "",
     dosis: "",
     expired_date: "",
+    barcode: "",
   });
 
   const { toast } = useToast();
@@ -78,7 +79,7 @@ export default function Products() {
   });
 
   const resetForm = () => {
-    setFormData({ name: "", category: "", price: "", stock: "", image: "", dosis: "", expired_date: "" });
+    setFormData({ name: "", category: "", price: "", stock: "", image: "", dosis: "", expired_date: "", barcode: "" });
     setEditingProduct(null);
   };
 
@@ -107,6 +108,7 @@ export default function Products() {
       image: product.image || "",
       dosis: product.dosis || "",
       expired_date: product.expired_date || "",
+      barcode: product.barcode || "",
     });
     setIsDialogOpen(true);
   };
@@ -267,6 +269,15 @@ export default function Products() {
                   type="date"
                   value={formData.expired_date}
                   onChange={(e) => setFormData({ ...formData, expired_date: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="barcode">Barcode</Label>
+                <Input
+                  id="barcode"
+                  value={formData.barcode}
+                  onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                  placeholder="Masukkan barcode produk"
                 />
               </div>
               <Button type="submit" className="w-full">
