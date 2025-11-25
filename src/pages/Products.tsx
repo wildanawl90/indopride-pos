@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Edit, Trash2, Search, Package } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Package, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 export default function Products() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -115,6 +116,13 @@ export default function Products() {
   );
 
   const categories = [...new Set(products?.map((p) => p.category) || [])];
+
+  const isExpiringSoon = (expiredDate: string | null) => {
+    if (!expiredDate) return false;
+    const threeMonthsFromNow = new Date();
+    threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
+    return new Date(expiredDate) <= threeMonthsFromNow;
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -230,6 +238,12 @@ export default function Products() {
                       <p className="text-sm text-muted-foreground">{product.category}</p>
                     </div>
                   </div>
+                  {isExpiringSoon(product.expired_date) && (
+                    <Badge variant="destructive" className="gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      Segera Expired
+                    </Badge>
+                  )}
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
