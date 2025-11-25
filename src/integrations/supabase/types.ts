@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       products: {
         Row: {
+          barcode: string | null
           category: string
           created_at: string
           dosis: string | null
@@ -27,6 +28,7 @@ export type Database = {
           stock: number
         }
         Insert: {
+          barcode?: string | null
           category: string
           created_at?: string
           dosis?: string | null
@@ -38,6 +40,7 @@ export type Database = {
           stock?: number
         }
         Update: {
+          barcode?: string | null
           category?: string
           created_at?: string
           dosis?: string | null
